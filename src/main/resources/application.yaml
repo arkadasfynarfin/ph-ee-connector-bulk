@@ -52,3 +52,14 @@ config:
     enable: false
 
 dfspids: "DFSPID"
+
+
+operations-app:
+  contactpoint: "https://ops-bk.sandbox.fynarfin.io"
+  username: "mifos"
+  password: "password"
+  endpoints:
+    auth: "/oauth/token"
+    batch-summary: "/api/v1/batch"
+    batch-transaction: "/api/v1/batch/transactions"
+    batch-detail: "/api/v1/batch/detail"

@@ -23,6 +23,15 @@ public class ZeebeVariables {
     public static final String PAGE_NUMBER = "pageNumber";
 
     public static final String CURRENT_TRANSACTION_COUNT = "currentTransactionCount";
+    public static final String ORIGIN_DATE = "originDate";
+    public static final String CHANNEL_REQUEST = "channelRequest";
+    public static final String PAGE_SIZE = "pageSize";
+    public static final String TOTAL_TRANSACTION_COUNT = "totalTransactionCount";
+    public static final String COMPLETED_TRANSACTION_COUNT = "completedTransactionCount";
+    public static final String FAILED_TRANSACTION_COUNT = "failedTransactionCount";
+    public static final String BATCH_DETAIL_SUCCESS = "batchDetailSuccess";
+    public static final String ONGOING_TRANSACTION_COUNT = "ongoingTransactionCount";
+    public static final String MAX_RETRY_COUNT = "maxRetryCount";
 
     private ZeebeVariables(){}
 

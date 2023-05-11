@@ -5,6 +5,7 @@ import org.apache.camel.support.DefaultExchange;
 import org.mifos.connector.bulk.camel.routes.RouteId;
 import org.mifos.connector.bulk.zeebe.workers.BaseWorker;
 import org.mifos.connector.bulk.zeebe.workers.Worker;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -14,6 +15,10 @@ import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 
 @Component
 public class BatchSummaryWorker extends BaseWorker {
+
+    private static final String COMPLETION_RATE = "completionRate";
+    @Value("")  // add value from config
+    public int maxBatchSummaryRetryCount;
 
     @Override
     public void setup() {
@@ -29,12 +34,7 @@ public class BatchSummaryWorker extends BaseWorker {
 
             boolean isBatchSummarySuccess = (boolean) exchange.getProperty(BATCH_SUMMARY_SUCCESS);
 
-            if(!isBatchSummarySuccess){
-                variables.put(ERROR_CODE, exchange.getProperty(ERROR_CODE));
-                variables.put(ERROR_DESCRIPTION, exchange.getProperty(ERROR_DESCRIPTION));
-                logger.info("Error: {}, {}", variables.get(ERROR_CODE), variables.get(ERROR_DESCRIPTION));
-            }
-
+            variables.put(MAX_RETRY_COUNT, maxBatchSummaryRetryCount);
             variables.put(CURRENT_RETRY_COUNT, ++currentRetryCount);
             variables.put(ONGOING_TRANSACTION, exchange.getProperty(ONGOING_TRANSACTION));
             variables.put(FAILED_TRANSACTION, exchange.getProperty(FAILED_TRANSACTION));
@@ -44,7 +44,17 @@ public class BatchSummaryWorker extends BaseWorker {
             variables.put(FAILED_AMOUNT, exchange.getProperty(FAILED_AMOUNT));
             variables.put(COMPLETED_AMOUNT, exchange.getProperty(COMPLETED_AMOUNT));
             variables.put(TOTAL_AMOUNT, exchange.getProperty(TOTAL_AMOUNT));
+            variables.put(COMPLETION_RATE, exchange.getProperty(COMPLETION_RATE));
 
+            variables.put(BATCH_SUMMARY_SUCCESS, isBatchSummarySuccess);
+
+            if(!isBatchSummarySuccess){
+                variables.put(ERROR_CODE, exchange.getProperty(ERROR_CODE));
+                variables.put(ERROR_DESCRIPTION, exchange.getProperty(ERROR_DESCRIPTION));
+                logger.info("Error: {}, {}", variables.get(ERROR_CODE), variables.get(ERROR_DESCRIPTION));
+            }
+
+//            logger.info("Retry: {} and Success Rate: {}", retry, successRate);
             client.newCompleteCommand(job.getKey()).variables(variables).send();
         });
     }

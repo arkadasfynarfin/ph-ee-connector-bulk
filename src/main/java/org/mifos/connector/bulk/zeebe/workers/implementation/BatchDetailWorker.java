@@ -22,11 +22,13 @@ public class BatchDetailWorker extends BaseWorker {
             Map<String, Object> variables = job.getVariablesAsMap();
 //            int currentReconciliationRetryCount = (int) variables.getOrDefault(CURRENT_RECONCILIATION_RETRY_COUNT, 0);
             int pageNumber = (int) variables.getOrDefault(PAGE_NUMBER, 1);
+            int pageSize = (int) variables.getOrDefault(PAGE_SIZE, 10);
             int currentTransactionCount = (int) variables.getOrDefault(CURRENT_TRANSACTION_COUNT, 0);
 
             Exchange exchange = new DefaultExchange(camelContext);
             exchange.setProperty(BATCH_ID, variables.get(BATCH_ID));
             exchange.setProperty(PAGE_NUMBER, pageNumber);
+            exchange.setProperty(PAGE_SIZE, pageSize);
             exchange.setProperty(PURPOSE, variables.get(PURPOSE));
 
             sendToCamelRoute(RouteId.BATCH_DETAIL, exchange);
