@@ -20,7 +20,7 @@ public class BatchDetailWorker extends BaseWorker {
 
         newWorker(Worker.BATCH_DETAILS, (client, job) -> {
             Map<String, Object> variables = job.getVariablesAsMap();
-//            int currentReconciliationRetryCount = (int) variables.getOrDefault(CURRENT_RECONCILIATION_RETRY_COUNT, 0);
+            int currentReconciliationRetryCount = (int) variables.getOrDefault(CURRENT_RECONCILIATION_RETRY_COUNT, 0);
             int pageNumber = (int) variables.getOrDefault(PAGE_NUMBER, 1);
             int currentTransactionCount = (int) variables.getOrDefault(CURRENT_TRANSACTION_COUNT, 0);
 
@@ -29,20 +29,21 @@ public class BatchDetailWorker extends BaseWorker {
             exchange.setProperty(PAGE_NUMBER, pageNumber);
             exchange.setProperty(PURPOSE, variables.get(PURPOSE));
 
-            sendToCamelRoute(RouteId.BATCH_DETAIL, exchange);
+           // sendToCamelRoute(RouteId.BATCH_DETAIL, exchange);
 
-            boolean isReconciliationSuccess = (boolean) exchange.getProperty(RECONCILIATION_SUCCESS);
+            boolean isReconciliationSuccess = true;
 
             if (!isReconciliationSuccess) {
                 variables.put(ERROR_CODE, exchange.getProperty(ERROR_CODE));
                 variables.put(ERROR_DESCRIPTION, exchange.getProperty(ERROR_DESCRIPTION));
             }
 
-            currentTransactionCount += (int) exchange.getProperty(TRANSACTION_COUNT);
+            //currentTransactionCount += (int) exchange.getProperty(TRANSACTION_COUNT);
             variables.put(RECONCILIATION_SUCCESS, isReconciliationSuccess);
             variables.put(CURRENT_TRANSACTION_COUNT, currentTransactionCount);
             variables.put(PAGE_NUMBER, ++pageNumber);
-//            variables.put(CURRENT_RECONCILIATION_RETRY_COUNT, ++currentReconciliationRetryCount);
+            variables.put(CURRENT_RECONCILIATION_RETRY_COUNT, 1);
+            variables.put(TOTAL_RECONCILIATION_RETRY_COUNT, 1);
 
             client.newCompleteCommand(job.getKey()).variables(variables).send();
 

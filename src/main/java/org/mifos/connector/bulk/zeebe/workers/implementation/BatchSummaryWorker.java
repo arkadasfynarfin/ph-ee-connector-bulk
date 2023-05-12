@@ -25,9 +25,9 @@ public class BatchSummaryWorker extends BaseWorker {
             exchange.setProperty(BATCH_ID, variables.get(BATCH_ID));
             exchange.setProperty(TENANT_ID, variables.get(TENANT_ID));
 
-            sendToCamelRoute(RouteId.BATCH_SUMMARY, exchange);
+            //sendToCamelRoute(RouteId.BATCH_SUMMARY, exchange);
 
-            boolean isBatchSummarySuccess = (boolean) exchange.getProperty(BATCH_SUMMARY_SUCCESS);
+            boolean isBatchSummarySuccess = true;
 
             if(!isBatchSummarySuccess){
                 variables.put(ERROR_CODE, exchange.getProperty(ERROR_CODE));
@@ -35,7 +35,8 @@ public class BatchSummaryWorker extends BaseWorker {
                 logger.info("Error: {}, {}", variables.get(ERROR_CODE), variables.get(ERROR_DESCRIPTION));
             }
 
-            variables.put(CURRENT_RETRY_COUNT, ++currentRetryCount);
+            variables.put(CURRENT_RETRY_COUNT, 2);
+            variables.put(TOTAL_RETRY_COUNT, 1);
             variables.put(ONGOING_TRANSACTION, exchange.getProperty(ONGOING_TRANSACTION));
             variables.put(FAILED_TRANSACTION, exchange.getProperty(FAILED_TRANSACTION));
             variables.put(TOTAL_TRANSACTION, exchange.getProperty(TOTAL_TRANSACTION));

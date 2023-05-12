@@ -22,14 +22,14 @@ public abstract class BaseWorker {
     @Autowired
     private ZeebeClient zeebeClient;
 
-    @Autowired
-    private CsvMapper csvMapper;
+//    @Autowired
+//    private CsvMapper csvMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("${application.bucket-name}")
-    private String bucketName;
+//    @Value("${application.bucket-name}")
+//    private String bucketName;
 
     @Value("${zeebe.client.evenly-allocated-max-jobs}")
     private int workerMaxJobs;

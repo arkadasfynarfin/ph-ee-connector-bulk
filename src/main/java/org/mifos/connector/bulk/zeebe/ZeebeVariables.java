@@ -50,7 +50,7 @@ public class ZeebeVariables {
 
     public static final String TRANSACTION_ID = "transactionId";
 
-    public static final String RECONCILIATION_SUCCESS = "reconciliationSuccess";
+    public static final String RECONCILIATION_SUCCESS = "isReconciliationSuccess";
 
 
 

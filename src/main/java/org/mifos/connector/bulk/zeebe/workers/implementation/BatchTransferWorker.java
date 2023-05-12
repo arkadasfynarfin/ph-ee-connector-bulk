@@ -28,7 +28,7 @@ public class BatchTransferWorker extends BaseWorker {
             exchange.setProperty(REQUEST_ID, variables.get(REQUEST_ID));
             exchange.setProperty(PURPOSE, variables.get(PURPOSE));
 
-            sendToCamelRoute(RouteId.INIT_BATCH_TRANSFER, exchange);
+            //sendToCamelRoute(RouteId.INIT_BATCH_TRANSFER, exchange);
 
             client.newCompleteCommand(job.getKey()).variables(variables).send();
 
