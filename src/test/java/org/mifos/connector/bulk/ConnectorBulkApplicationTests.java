@@ -10,7 +10,7 @@ class ConnectorBulkApplicationTests {
 
 //	@Test
 //	void contextLoads() {
-//        System.out.println(UUID.randomUUID());
+//
 //	}
 
 }

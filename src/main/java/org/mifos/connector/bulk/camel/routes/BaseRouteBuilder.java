@@ -29,8 +29,8 @@ public abstract class BaseRouteBuilder extends RouteBuilder {
     @Autowired
     ZeebeClient zeebeClient;
 
-    @Value("#{'${tenants}'.split(',')}")
-    protected List<String> tenants;
+//    @Value("#{'${tenants}'.split(',')}")
+//    protected List<String> tenants;
 
     @Value("${cloud.aws.s3-base-url}")
     protected String awsS3BaseUrl;

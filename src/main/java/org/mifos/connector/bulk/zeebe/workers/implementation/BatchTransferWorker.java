@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-import static org.mifos.connector.bulk.camel.config.CamelProperties.CSV_FILE_NAME;
 import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 
 @Component
@@ -30,11 +29,9 @@ public class BatchTransferWorker extends BaseWorker {
 
             sendToCamelRoute(RouteId.INIT_BATCH_TRANSFER, exchange);
 
-            //
             variables.put(BATCH_ID, exchange.getProperty(BATCH_ID));
 
             client.newCompleteCommand(job.getKey()).variables(variables).send();
-
         });
 
     }

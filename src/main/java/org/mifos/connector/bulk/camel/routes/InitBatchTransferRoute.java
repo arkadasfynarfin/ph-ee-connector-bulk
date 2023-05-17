@@ -12,32 +12,17 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-//import static org.mifos.connector.bulk.camel.routes.FileRoute.LOCAL_FILE_PATH;
-
-//import static org.mifos.connector.bulk.camel.routes.FileProcessingRoute.TRANSACTION_LIST;
+import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 
 @Component
 public class InitBatchTransferRoute extends BaseRouteBuilder {
 
-    private static final String TRANSACTION_LIST = "transactionList";
-    private static final String BATCH_ID = "batchId";
-    private static final String FILE_NAME = "fileName";
-    private static final String REQUEST_ID = "requestId";
-    private static final String PURPOSE = "purpose";
-    private static final String TOTAL_AMOUNT = "totalAmount";
-    private static final String FAILED_AMOUNT = "failedAmount";
-    private static final String ONGOING_AMOUNT = "ongoingAmount";
-    private static final String RESULT_FILE = "resultFile";
     private static final String ZEEBE_VARIABLE = "zeebeVariable";
-    private static final String PAYMENT_MODE = "paymentMode";
-    private static final String COMPLETED_AMOUNT = "completedAmount";
     private static final String IS_PAYMENT_MODE_VALID = "isPaymentModeValid";
     private static final String PAYMENT_MODE_TYPE = "paymentModeType";
-    private static final String INIT_BATCH_TRANSFER_FAILED = "initBatchTransferFailed";
     private static final String RESULT_TRANSACTION_LIST = "resultTransactionList";
     private static final String LOCAL_FILE_PATH = "localFilePath";
     private static final String OVERRIDE_HEADER = "overrideHeader";
-    private static final String TENANT_NAME = "tenantName";
 
     @Autowired
     private PaymentModeConfiguration paymentModeConfiguration;
@@ -53,15 +38,15 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .log("Starting route: " + RouteId.INIT_BATCH_TRANSFER.getValue())
                 .to("direct:download-file")
                 .to("direct:get-transaction-array")
-                .to("direct:start-workflow");
+                .to("direct:start-workflow-1");
 
-        from("direct:start-workflow")
-                .id("direct:start-workflow")
-                .log("Starting route: direct:start-workflow-1");
+//        from("direct:start-workflow")
+//                .id("direct:start-workflow")
+//                .log("Starting route: direct:start-workflow");
 
-        from("direct:start-workflow-1")
-                .id("direct:start-flow-step1")
-                .log("Starting route direct:start-flow-step1")
+        from("direct:start-workflow-step-1")
+                .id("direct:start-workflow-step-1")
+                .log("Starting route: direct:start-workflow-step-1")
                 .process(exchange -> {
                     List<Transaction> transactionList = exchange.getProperty(TRANSACTION_LIST, List.class);
 
@@ -82,28 +67,28 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
 
 
                 })
-                .to("direct:start-workflow-step2");
+                .to("direct:start-workflow-step-2");
 
-        from("direct:start-workflow-step2")
-                .id("direct:start-flow-step2")
-                .log("Starting route direct:start-flow-step2")
+        from("direct:start-workflow-step-2")
+                .id("direct:start-workflow-step-2")
+                .log("Starting route: direct:start-workflow-step-2")
                 .to("direct:validate-payment-mode")
                 .choice()
                 // if invalid payment mode
                 .when(exchangeProperty(IS_PAYMENT_MODE_VALID).isEqualTo(false))
                 .to("direct:payment-mode-missing")
-                .setProperty(INIT_BATCH_TRANSFER_FAILED, constant(true))
+                .setProperty(INIT_BATCH_TRANSFER_SUCCESS, constant(false))
                 // else
                 .otherwise()
-                .to("direct:start-workflow-step3")
+                .to("direct:start-workflow-step-3")
                 .endChoice();
 
         from("direct:validate-payment-mode")
                 .id("direct:validate-payment-mode")
                 .log("Starting route direct:validate-payment-mode")
                 .process(exchange -> {
-                    String paymentMde = exchange.getProperty(PAYMENT_MODE, String.class);
-                    PaymentModeMapping mapping = paymentModeConfiguration.getByMode(paymentMde);
+                    String paymentMode = exchange.getProperty(PAYMENT_MODE, String.class);
+                    PaymentModeMapping mapping = paymentModeConfiguration.getByMode(paymentMode);
                     if (mapping == null) {
                         exchange.setProperty(IS_PAYMENT_MODE_VALID, false);
                     } else {
@@ -136,9 +121,9 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .to("direct:upload-file");
 
 
-        from("direct:start-workflow-step3")
-                .id("direct:start-flow-step3")
-                .log("Starting route direct:start-flow-step3")
+        from("direct:start-workflow-step-3")
+                .id("direct:start-workflow-step-3")
+                .log("Starting route direct:start-workflow-step-3")
                 .choice()
                 // if type of payment mode is bulk
                 .when(exchangeProperty(PAYMENT_MODE_TYPE).isEqualTo(PaymentModeType.BULK))
@@ -152,7 +137,7 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                     zeebeProcessStarter.startZeebeWorkflow(
                             Utils.getBulkConnectorBpmnName(mapping.getEndpoint(), mapping.getId().toLowerCase(), tenantName),
                             variables);
-                    exchange.setProperty(INIT_BATCH_TRANSFER_FAILED, false);
+                    exchange.setProperty(INIT_BATCH_TRANSFER_SUCCESS, true);
                 });
     }
 

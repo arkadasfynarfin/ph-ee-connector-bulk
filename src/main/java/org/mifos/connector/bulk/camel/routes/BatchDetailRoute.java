@@ -3,8 +3,9 @@ package org.mifos.connector.bulk.camel.routes;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.mifos.connector.bulk.schema.BatchDTO;
 import org.mifos.connector.bulk.schema.BatchDetailResponse;
+import org.mifos.connector.bulk.schema.Transfer;
+import org.mifos.connector.bulk.schema.TransferStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +16,6 @@ import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 @Component
 public class BatchDetailRoute extends BaseRouteBuilder {
 
-
-    private static final String PAGE_NO = "pageNo";
     @Value("${config.completion-threshold-check.completion-threshold}")
     private int completionThreshold;
 
@@ -67,24 +66,25 @@ public class BatchDetailRoute extends BaseRouteBuilder {
                     int failedTransferCount = Integer.parseInt(exchange.getProperty(FAILED_TRANSACTION_COUNT, String.class));
                     int ongoingTransferCount = Integer.parseInt(exchange.getProperty(ONGOING_TRANSACTION_COUNT, String.class));
                     int totalTransferCount = Integer.parseInt(exchange.getProperty(TOTAL_TRANSACTION_COUNT, String.class));
-                    // fetch details based on response
 
-                    List<Object> transfers = null;
+                    BatchDetailResponse batchDetailResponse = exchange.getIn().getBody(BatchDetailResponse.class);
+
+                    List<Transfer> transfers = batchDetailResponse.getContent();
                     int completedTransferCountPerPage = 0;
                     int ongoingTransferCountPerPage = 0;
                     int failedTransferCountPerPage = 0;
                     int transferCountPerPage = 0;
 
-                    for(Object transfer : transfers){
-//                        String transferStatus = transfer.getStatus();
-                        String transferStatus = "";
-                        if(("COMPLETED").equals(transferStatus)){
+                    for(Transfer transfer : transfers){
+                        TransferStatus transferStatus = transfer.getStatus();
+
+                        if(TransferStatus.COMPLETED.equals(transferStatus)){
                             completedTransferCountPerPage++;
                         }
-                        else if(("FAILED").equals(transferStatus)){
+                        else if(TransferStatus.FAILED.equals(transferStatus)){
                             failedTransferCountPerPage++;
                         }
-                        else if(("IN_PROGRESS").equals(transferStatus)){
+                        else if(TransferStatus.IN_PROGRESS.equals(transferStatus)){
                             ongoingTransferCountPerPage++;
                         }
                         transferCountPerPage++;

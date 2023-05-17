@@ -27,7 +27,7 @@ public class FileRoute extends BaseRouteBuilder {
     public void configure() throws Exception {
         from("direct:download-file")
                 .id("direct:download-file")
-                .log("Started download-file route")
+                .log("Starting route: direct:download-file")
                 .process(exchange -> {
                     String filename = exchange.getProperty(FILE_NAME, String.class);
 
@@ -48,7 +48,7 @@ public class FileRoute extends BaseRouteBuilder {
          */
         from("direct:upload-file")
                 .id("direct:upload-file")
-                .log("Uploading file")
+                .log("Starting route: direct:upload-file")
                 .process(exchange -> {
                     String filepath = exchange.getProperty(LOCAL_FILE_PATH, String.class);
                     String serverFileName = fileTransferService.uploadFile(new File(filepath), bucketName);

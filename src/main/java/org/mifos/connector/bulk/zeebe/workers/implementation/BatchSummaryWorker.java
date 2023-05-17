@@ -10,13 +10,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-import static org.mifos.connector.bulk.camel.config.CamelProperties.BATCH_SUMMARY_SUCCESS;
 import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 
 @Component
 public class BatchSummaryWorker extends BaseWorker {
 
-    private static final String COMPLETION_RATE = "completionRate";
     @Value("")  // add value from config
     public int maxBatchSummaryRetryCount;
 
@@ -54,7 +52,6 @@ public class BatchSummaryWorker extends BaseWorker {
                 logger.info("Error: {}, {}", variables.get(ERROR_CODE), variables.get(ERROR_DESCRIPTION));
             }
 
-//            logger.info("Retry: {} and Success Rate: {}", retry, successRate);
             client.newCompleteCommand(job.getKey()).variables(variables).send();
         });
     }

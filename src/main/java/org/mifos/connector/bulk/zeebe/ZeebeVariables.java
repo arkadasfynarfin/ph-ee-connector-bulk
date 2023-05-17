@@ -61,6 +61,20 @@ public class ZeebeVariables {
 
     public static final String RECONCILIATION_SUCCESS = "reconciliationSuccess";
 
+    public static final String TRANSACTION_LIST = "transactionList";
 
+    public static final String RESULT_FILE = "resultFile";
+
+    public static final String PAYMENT_MODE = "paymentMode";
+
+    public static final String INIT_BATCH_TRANSFER_SUCCESS = "initBatchTransferSuccess";
+
+    public static final String TENANT_NAME = "tenantName";
+
+    public static final String COMPLETION_RATE = "completionRate";
+
+    public static final String BATCH_SUMMARY_SUCCESS = "batchSummarySuccess";
+
+    public static final String PAGE_NO = "pageNo";
 
 }

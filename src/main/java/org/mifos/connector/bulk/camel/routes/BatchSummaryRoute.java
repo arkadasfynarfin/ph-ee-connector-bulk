@@ -14,12 +14,6 @@ import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 @Component
 public class BatchSummaryRoute extends BaseRouteBuilder {
 
-    private static final String COMPLETION_RATE = "completionRate";
-    private static final String BATCH_STATUS_FAILED = "batchStatusFailed";
-    private static final String ERROR_CODE = "errorCode";
-    private static final String ERROR_DESCRIPTION = "errorDescription";
-    private static final String BATCH_SUMMARY_SUCCESS = "batchSummarySuccess";
-
     @Value("${config.completion-threshold-check.completion-threshold}")
     private int completionThreshold;
 
