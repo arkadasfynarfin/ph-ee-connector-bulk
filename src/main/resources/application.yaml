@@ -7,6 +7,8 @@ camel:
     json-jackson:
       auto-discover-object-mapper: true
 
+server:
+  port: 8090
 
 zeebe:
   client:
@@ -23,8 +25,10 @@ cloud:
     enabled: true
     s3-base-url: "https://paymenthub-ee-dev.s3.us-east-2.amazonaws.com"
     credentials:
-      access-key: ${AWS_ACCESS_KEY:access_key_from_aws}
-      secret-key: ${AWS_SECRET_KEY:secret_key_from_aws}
+#      access-key: ${AWS_ACCESS_KEY:access_key_from_aws}
+#      secret-key: ${AWS_SECRET_KEY:secret_key_from_aws}
+      access-key: "AKIAX32JM37TZOJ5AKFB"
+      secret-key: "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"
     region:
       static: us-east-2
     stack:
@@ -50,7 +54,8 @@ slcb:
 
 config:
   completion-threshold-check:
-    completion-threshold: 95
+    completion-threshold: 60
+    max-retry-count: 10
   date-format: "yyyy-MM-dd'T'hh:mm:ssXXX"
   reconciliation:
     enable: false
@@ -85,3 +90,4 @@ payment-mode:
 
 application:
   bucket-name: paymenthub-ee-dev
+

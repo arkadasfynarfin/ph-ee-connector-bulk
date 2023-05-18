@@ -15,14 +15,14 @@ import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 @Component
 public class BatchSummaryWorker extends BaseWorker {
 
-    @Value("")  // add value from config
-    public int maxBatchSummaryRetryCount;
+    @Value("${config.completion-threshold-check.max-retry-count}")
+    public int maxRetryCount;
 
     @Override
     public void setup() {
         newWorker(Worker.BATCH_SUMMARY, (client, job)->{
             Map<String, Object> variables = job.getVariablesAsMap();
-            int currentRetryCount = (int) variables.getOrDefault(CURRENT_RETRY_COUNT, 0);
+            int currentRetryCount = (int) variables.getOrDefault(CURRENT_RETRY_COUNT, 1);
 
             Exchange exchange = new DefaultExchange(camelContext);
             exchange.setProperty(BATCH_ID, variables.get(BATCH_ID));
@@ -32,7 +32,7 @@ public class BatchSummaryWorker extends BaseWorker {
 
             boolean isBatchSummarySuccess = (boolean) exchange.getProperty(BATCH_SUMMARY_SUCCESS);
 
-            variables.put(MAX_RETRY_COUNT, maxBatchSummaryRetryCount);
+            variables.put(MAX_RETRY_COUNT, maxRetryCount);
             variables.put(CURRENT_RETRY_COUNT, ++currentRetryCount);
             variables.put(ONGOING_TRANSACTION, exchange.getProperty(ONGOING_TRANSACTION));
             variables.put(FAILED_TRANSACTION, exchange.getProperty(FAILED_TRANSACTION));
