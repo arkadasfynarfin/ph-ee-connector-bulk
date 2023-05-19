@@ -25,6 +25,7 @@ dependencies {
 //	implementation 'org.apache.camel:camel-jetty:3.4.0'		// check if this is used
 	implementation 'org.apache.camel:camel-undertow:3.4.0'
 	implementation 'org.apache.camel:camel-http:3.4.0'
+	implementation 'org.apache.camel:camel-jackson:3.4.0'
 //	implementation 'org.apache.camel.springboot:camel-jackson-starter:3.4.0'	// check if this is used
 //	implementation 'org.apache.camel:camel-test-junit5:3.4.0'	// check if this is used
 	implementation 'org.json:json:20210307'

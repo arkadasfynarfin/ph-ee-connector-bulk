@@ -1,5 +1,7 @@
 package org.mifos.connector.bulk.camel.routes;
 
+import org.apache.camel.Exchange;
+import org.apache.camel.LoggingLevel;
 import org.mifos.connector.bulk.config.PaymentModeConfiguration;
 import org.mifos.connector.bulk.config.PaymentModeMapping;
 import org.mifos.connector.bulk.config.PaymentModeType;
@@ -8,9 +10,14 @@ import org.mifos.connector.bulk.schema.TransactionResult;
 import org.mifos.connector.bulk.utils.Utils;
 import org.mifos.connector.bulk.zeebe.ZeebeProcessStarter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.mifos.connector.bulk.zeebe.ZeebeVariables.*;
 
@@ -24,6 +31,15 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
     private static final String LOCAL_FILE_PATH = "localFilePath";
     private static final String OVERRIDE_HEADER = "overrideHeader";
 
+    @Value("${payment-mode.default}")
+    private String defaultPaymentMode;
+
+    @Value("${payment-mode.default}")
+    private String bulkProcessorContactPoint;
+
+    @Value("${payment-mode.default}")
+    private String bulkProcessorEndPoint;
+
     @Autowired
     private PaymentModeConfiguration paymentModeConfiguration;
 
@@ -33,8 +49,8 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from(RouteId.INIT_BATCH_TRANSFER.toString())
-                .id(RouteId.INIT_BATCH_TRANSFER.toString())
+        from("direct:initBatchTransfer")
+                .id("direct:initBatchTransfer")
                 .log("Starting route: " + RouteId.INIT_BATCH_TRANSFER.getValue())
                 .to("direct:download-file")
                 .to("direct:get-transaction-array")
@@ -121,24 +137,91 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .to("direct:upload-file");
 
 
+//        from("direct:start-workflow-step-3")
+//                .id("direct:start-workflow-step-3")
+//                .log("Starting route direct:start-workflow-step-3")
+//                .choice()
+//                // if type of payment mode is bulk
+//                .when(exchangeProperty(PAYMENT_MODE_TYPE).isEqualTo(PaymentModeType.BULK))
+//                .process(exchange -> {
+//                    String paymentMode = exchange.getProperty(PAYMENT_MODE, String.class);
+//                    PaymentModeMapping mapping = paymentModeConfiguration.getByMode(paymentMode);
+//
+//                    String tenantName = exchange.getProperty(TENANT_NAME, String.class);
+//                    Map<String, Object> variables = exchange.getProperty(ZEEBE_VARIABLE, Map.class);
+//                    variables.put(PAYMENT_MODE, paymentMode);
+//                    zeebeProcessStarter.startZeebeWorkflow(
+//                            Utils.getBulkConnectorBpmnName(mapping.getEndpoint(), mapping.getId().toLowerCase(), tenantName),
+//                            variables);
+//                    exchange.setProperty(INIT_BATCH_TRANSFER_SUCCESS, true);
+//                });
+
         from("direct:start-workflow-step-3")
                 .id("direct:start-workflow-step-3")
                 .log("Starting route direct:start-workflow-step-3")
-                .choice()
-                // if type of payment mode is bulk
-                .when(exchangeProperty(PAYMENT_MODE_TYPE).isEqualTo(PaymentModeType.BULK))
-                .process(exchange -> {
-                    String paymentMode = exchange.getProperty(PAYMENT_MODE, String.class);
-                    PaymentModeMapping mapping = paymentModeConfiguration.getByMode(paymentMode);
+                .to("direct:update-payment-mode")
+                .to("direct:batch-transaction")
+                .to("direct:batch-transaction-response-handler");
 
-                    String tenantName = exchange.getProperty(TENANT_NAME, String.class);
-                    Map<String, Object> variables = exchange.getProperty(ZEEBE_VARIABLE, Map.class);
-                    variables.put(PAYMENT_MODE, paymentMode);
-                    zeebeProcessStarter.startZeebeWorkflow(
-                            Utils.getBulkConnectorBpmnName(mapping.getEndpoint(), mapping.getId().toLowerCase(), tenantName),
-                            variables);
-                    exchange.setProperty(INIT_BATCH_TRANSFER_SUCCESS, true);
+//                .choice()
+//                // if type of payment mode is bulk
+//                .when(exchangeProperty(PAYMENT_MODE_TYPE).isEqualTo(PaymentModeType.BULK))
+//                .process(exchange -> {
+//                    String paymentMode = exchange.getProperty(PAYMENT_MODE, String.class);
+//                    PaymentModeMapping mapping = paymentModeConfiguration.getByMode(paymentMode);
+//
+//                    String tenantName = exchange.getProperty(TENANT_NAME, String.class);
+//                    Map<String, Object> variables = exchange.getProperty(ZEEBE_VARIABLE, Map.class);
+//                    variables.put(PAYMENT_MODE, paymentMode);
+//                    zeebeProcessStarter.startZeebeWorkflow(
+//                            Utils.getBulkConnectorBpmnName(mapping.getEndpoint(), mapping.getId().toLowerCase(), tenantName),
+//                            variables);
+//                    exchange.setProperty(INIT_BATCH_TRANSFER_SUCCESS, true);
+//                });
+
+        from("direct:update-payment-mode")
+                .id("direct:update-payment-mode")
+                .log("Starting route direct:update-payment-mode")
+                .process(exchange ->{
+                    List<Transaction> transactions = exchange.getProperty(TRANSACTION_LIST, List.class);
+                    List<Transaction> updatedTransactions= transactions.stream()
+                            .map(transaction -> {transaction.setPaymentMode(defaultPaymentMode);
+                            return transaction;
+                    }).collect(Collectors.toList());
                 });
+
+        from("direct:batch-transaction")
+                .id("direct:batch-transaction")
+                .log("Starting route: " + "direct:batch-transaction")
+                .removeHeader("*")
+                .setHeader(Exchange.HTTP_METHOD, constant(HttpRequestMethod.POST))
+                .setHeader("X-Date", simple(ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT )))
+                .setHeader("Content-Type", constant("application/json;charset=UTF-8"))
+                .setHeader("Accept", constant("application/json, text/plain, */*"))
+                .setHeader(Exchange.REST_HTTP_QUERY, simple("type=csv"))
+                .setHeader("Purpose", simple("test"))
+                .setHeader("filename", simple("${exchangeProperty." + FILE_NAME + "}"))
+                .setHeader("Platform-TenantId", simple("${exchangeProperty." + TENANT_ID + "}"))
+                .process(exchange -> {
+                    logger.info(exchange.getIn().getHeaders().toString());
+                })
+//                .toD(bulkProcessorContactPoint + bulkProcessorEndPoint + "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                .toD("" + "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                .log(LoggingLevel.INFO, "Batch transaction API response: \n\n ${body}");
+
+        from("direct:batch-transaction-response-handler")
+                .id("direct:batch-transaction-response-handler")
+                .log("Starting route direct:batch-transaction-response-handler")
+                .choice()
+                .when(header("CamelHttpResponseCode").isEqualTo(200))
+                .process(exchange -> {
+                    logger.info("reached here");
+                    exchange.setProperty(INIT_BATCH_TRANSFER_SUCCESS, true);})
+                .otherwise()
+                .process(exchange -> {
+                    exchange.setProperty(INIT_BATCH_TRANSFER_SUCCESS, false);
+                })
+                .endChoice();
     }
 
     private List<TransactionResult> updateTransactionStatusToFailed(List<Transaction> transactionList) {

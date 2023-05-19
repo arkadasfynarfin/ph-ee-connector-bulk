@@ -46,7 +46,8 @@ public class BatchDetailRoute extends BaseRouteBuilder {
                 .process(exchange -> {
                     logger.info(exchange.getIn().getHeaders().toString());
                 })
-                .toD(operationsAppConfig.batchDetailUrl + "?bridgeEndpoint=true")
+//                .toD(operationsAppConfig.batchDetailUrl +  "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                .toD("https://ops-bk.sandbox.fynarfin.io//api/v1/batch/detail" +  "?bridgeEndpoint=true&throwExceptionOnFailure=false")
                 .log(LoggingLevel.INFO, "Batch detail API response: \n\n ${body}");
 
         from("direct:batch-detail-response-handler")

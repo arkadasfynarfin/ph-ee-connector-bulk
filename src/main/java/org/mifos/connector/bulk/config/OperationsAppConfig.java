@@ -11,7 +11,10 @@ public class OperationsAppConfig {
     @Value("${operations-app.contactpoint}")
     public String operationAppContactPoint;
 
-    @Value("${operations-app.endpoints.batch-transaction}")
+//    @Value("${bulk-processor.contactpoint}")
+//    public String bulkProcessorContactPoint;
+
+    @Value("${bulk-processor.endpoints.batch-transaction}")
     public String batchTransactionEndpoint;
 
     @Value("${operations-app.endpoints.batch-summary}")
