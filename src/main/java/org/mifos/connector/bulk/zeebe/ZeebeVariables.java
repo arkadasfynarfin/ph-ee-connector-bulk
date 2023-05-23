@@ -2,6 +2,8 @@ package org.mifos.connector.bulk.zeebe;
 
 public class ZeebeVariables {
 
+    private ZeebeVariables(){}
+
     public static final String PURPOSE = "purpose";
 
     public static final String TOTAL_TRANSACTION = "totalTransactions";
@@ -23,17 +25,24 @@ public class ZeebeVariables {
     public static final String PAGE_NUMBER = "pageNumber";
 
     public static final String CURRENT_TRANSACTION_COUNT = "currentTransactionCount";
-    public static final String ORIGIN_DATE = "originDate";
-    public static final String CHANNEL_REQUEST = "channelRequest";
-    public static final String PAGE_SIZE = "pageSize";
-    public static final String TOTAL_TRANSACTION_COUNT = "totalTransactionCount";
-    public static final String COMPLETED_TRANSACTION_COUNT = "completedTransactionCount";
-    public static final String FAILED_TRANSACTION_COUNT = "failedTransactionCount";
-    public static final String BATCH_DETAIL_SUCCESS = "batchDetailSuccess";
-    public static final String ONGOING_TRANSACTION_COUNT = "ongoingTransactionCount";
-    public static final String MAX_RETRY_COUNT = "maxRetryCount";
 
-    private ZeebeVariables(){}
+    public static final String ORIGIN_DATE = "originDate";
+
+    public static final String CHANNEL_REQUEST = "channelRequest";
+
+    public static final String PAGE_SIZE = "pageSize";
+
+    public static final String TOTAL_TRANSACTION_COUNT = "totalTransactionCount";
+
+    public static final String COMPLETED_TRANSACTION_COUNT = "completedTransactionCount";
+
+    public static final String FAILED_TRANSACTION_COUNT = "failedTransactionCount";
+
+    public static final String BATCH_DETAIL_SUCCESS = "batchDetailSuccess";
+
+    public static final String ONGOING_TRANSACTION_COUNT = "ongoingTransactionCount";
+
+    public static final String MAX_RETRY_COUNT = "maxRetryCount";
 
     public static final String BATCH_ID = "batchId";
 
@@ -47,7 +56,7 @@ public class ZeebeVariables {
 
     public static final String TOTAL_RECONCILIATION_RETRY_COUNT = "totalReconciliationRetryCount";
 
-    public static final String FILE_NAME = "fileName";
+    public static final String FILE_NAME = "filename";
 
     public static final String TENANT_ID = "tenantId";
 

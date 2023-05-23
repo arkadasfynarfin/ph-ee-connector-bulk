@@ -2,6 +2,9 @@ package org.mifos.connector.bulk.cucumber.stepdef;
 
 import com.google.gson.Gson;
 import io.restassured.http.Headers;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -16,12 +19,18 @@ import io.restassured.specification.RequestSpecification;
 import org.mifos.connector.bulk.schema.BatchDTO;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -52,6 +61,7 @@ public class BulkPaymentStepDef extends BaseStepDef {
         headers.put("Platform-TenantId", "gorilla");
 //        String fileContent = getFileContent(BPMN_FILE_URL);
         String fileContent = getFileContent("test.csv");
+        logger.info("file content: " + fileContent);
         RequestSpecification requestSpec = getDefaultSpec();
         String response =  RestAssured.given(requestSpec)
                 .baseUri("https://bulk-connector.sandbox.fynarfin.io")
@@ -122,12 +132,24 @@ public class BulkPaymentStepDef extends BaseStepDef {
                 build();
     }
 
-    private String getFileContent(String fileUrl) {
+    private String getFileContent(String filePath) {
+        File file = new File(filePath);
+        Reader reader;
+        CSVFormat csvFormat;
+        CSVParser csvParser = null;
         try {
-            return IOUtils.toString(URI.create(fileUrl), StandardCharsets.UTF_8);
+            reader = new FileReader(file);
+            csvFormat = CSVFormat.DEFAULT.withDelimiter(',');
+            csvParser = new CSVParser(reader, csvFormat);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        StringJoiner stringJoiner = new StringJoiner("\n");
+
+        for (CSVRecord csvRecord : csvParser) {
+            stringJoiner.add(csvRecord.toString());
+        }
+        return stringJoiner.toString();
     }
 
     private String fetchBatchId(String response) {
