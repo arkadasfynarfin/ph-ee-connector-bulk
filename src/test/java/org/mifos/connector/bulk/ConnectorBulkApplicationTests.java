@@ -8,9 +8,9 @@ import java.util.UUID;
 @SpringBootTest
 class ConnectorBulkApplicationTests {
 
-//	@Test
-//	void contextLoads() {
-//
-//	}
+	@Test
+	void contextLoads() {
+
+	}
 
 }

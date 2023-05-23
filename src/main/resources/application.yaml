@@ -54,7 +54,7 @@ slcb:
 
 config:
   completion-threshold-check:
-    completion-threshold: 60
+    completion-threshold: 90
     max-retry-count: 10
   date-format: "yyyy-MM-dd'T'hh:mm:ssXXX"
   reconciliation:

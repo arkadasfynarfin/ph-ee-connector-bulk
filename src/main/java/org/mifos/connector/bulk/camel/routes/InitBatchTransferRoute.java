@@ -196,7 +196,6 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .removeHeader("*")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpRequestMethod.POST))
                 .setHeader("X-Date", simple(ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT )))
-                .setHeader("Content-Type", constant("application/json;charset=UTF-8"))
                 .setHeader("Accept", constant("application/json, text/plain, */*"))
                 .setHeader(Exchange.REST_HTTP_QUERY, simple("type=csv"))
                 .setHeader("Purpose", simple("test"))
@@ -205,8 +204,10 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .process(exchange -> {
                     logger.info(exchange.getIn().getHeaders().toString());
                 })
+                .marshal().mimeMultipart()
+                .setHeader(Exchange.CONTENT_TYPE, constant("multipart/form-data"))
 //                .toD(bulkProcessorContactPoint + bulkProcessorEndPoint + "?bridgeEndpoint=true&throwExceptionOnFailure=false")
-                .toD("" + "?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                .toD("" + "?bridgeEndpoint=true&throwExceptionOnFailure=false&multipart=true")
                 .log(LoggingLevel.INFO, "Batch transaction API response: \n\n ${body}");
 
         from("direct:batch-transaction-response-handler")
