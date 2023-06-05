@@ -51,7 +51,7 @@ public class ZeebeProcessStarter {
         }
 
         // TODO if successful transfer response arrives in X timeout return it otherwise do callback
-        ProcessInstanceEvent join = zeebeClient.newCreateInstanceCommand()
+        zeebeClient.newCreateInstanceCommand()
                 .bpmnProcessId(workflowId)
                 .latestVersion()
                 .variables(variables)
@@ -74,7 +74,7 @@ public class ZeebeProcessStarter {
         }
 
         // TODO if successful transfer response arrives in X timeout return it otherwise do callback
-        ProcessInstanceEvent join = zeebeClient.newCreateInstanceCommand()
+        zeebeClient.newCreateInstanceCommand()
                 .bpmnProcessId(workflowId)
                 .latestVersion()
                 .variables(variables)

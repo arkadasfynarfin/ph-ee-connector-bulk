@@ -12,6 +12,7 @@ public class Transfer {
     private String transactionId;
 
     private Date startedAt;
+
     private Date completedAt;
 
     private TransferStatus status;
@@ -64,6 +65,7 @@ public class Transfer {
     }
 
     public Transfer(String id, Long workflowInstanceKey, String transactionId, Date startedAt, Date completedAt,
+//    public Transfer(Long workflowInstanceKey, String transactionId, Date startedAt, Date completedAt,
                     TransferStatus status, String statusDetail, String payeeDfspId, String payeePartyId,
                     String payeePartyIdType, BigDecimal payeeFee, String payeeFeeCurrency, String payeeQuoteCode,
                     String payerDfspId, String payerPartyId, String payerPartyIdType, BigDecimal payerFee,
@@ -94,6 +96,14 @@ public class Transfer {
         this.errorInformation = errorInformation;
         this.batchId = batchId;
         this.clientCorrelationId = clientCorrelationId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Date getCompletedAt() {

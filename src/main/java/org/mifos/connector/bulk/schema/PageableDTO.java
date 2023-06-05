@@ -14,6 +14,8 @@ public class PageableDTO {
 
     private boolean paged;
 
+    public PageableDTO(){}
+
     public PageableDTO(SortDTO sort, Long pageSize, Long pageNumber, Long offset, boolean unpaged, boolean paged) {
         this.sort = sort;
         this.pageSize = pageSize;

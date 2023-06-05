@@ -26,6 +26,8 @@ public class BatchDetailResponse {
 
     private boolean empty;
 
+    public BatchDetailResponse(){}
+
     public BatchDetailResponse(List<Transfer> content, PageableDTO pageable,
                                Long totalPages, Long totalElements, boolean last, boolean first,
                                SortDTO sort, Long numberOfElements, Long size, Long number, boolean empty) {

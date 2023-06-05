@@ -1,18 +1,31 @@
 package org.mifos.connector.bulk.camel.routes;
 
+import com.sun.istack.ByteArrayDataSource;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Message;
+import org.apache.camel.attachment.AttachmentMessage;
+import org.apache.camel.attachment.DefaultAttachment;
+import org.apache.camel.model.dataformat.MimeMultipartDataFormat;
+import org.apache.camel.support.DefaultMessage;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.mifos.connector.bulk.config.PaymentModeConfiguration;
 import org.mifos.connector.bulk.config.PaymentModeMapping;
 import org.mifos.connector.bulk.config.PaymentModeType;
+import org.mifos.connector.bulk.file.FileTransferService;
 import org.mifos.connector.bulk.schema.Transaction;
 import org.mifos.connector.bulk.schema.TransactionResult;
 import org.mifos.connector.bulk.utils.Utils;
 import org.mifos.connector.bulk.zeebe.ZeebeProcessStarter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import javax.activation.DataSource;
+import java.io.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,11 +53,18 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
     @Value("${payment-mode.default}")
     private String bulkProcessorEndPoint;
 
+    @Value("${application.bucket-name}")
+    private String bucketName;
+
     @Autowired
     private PaymentModeConfiguration paymentModeConfiguration;
 
     @Autowired
     private ZeebeProcessStarter zeebeProcessStarter;
+
+    @Autowired
+    @Qualifier("awsStorage")
+    private FileTransferService fileTransferService;
 
     @Override
     public void configure() throws Exception {
@@ -54,7 +74,7 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .log("Starting route: " + RouteId.INIT_BATCH_TRANSFER.getValue())
                 .to("direct:download-file")
                 .to("direct:get-transaction-array")
-                .to("direct:start-workflow-1");
+                .to("direct:start-workflow-step-1");
 
 //        from("direct:start-workflow")
 //                .id("direct:start-workflow")
@@ -159,9 +179,9 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
         from("direct:start-workflow-step-3")
                 .id("direct:start-workflow-step-3")
                 .log("Starting route direct:start-workflow-step-3")
-                .to("direct:update-payment-mode")
-                .to("direct:batch-transaction")
-                .to("direct:batch-transaction-response-handler");
+                .to("direct:update-payment-mode");
+//                .to("direct:batch-transaction")
+//                .to("direct:batch-transaction-response-handler");
 
 //                .choice()
 //                // if type of payment mode is bulk
@@ -195,19 +215,90 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
                 .log("Starting route: " + "direct:batch-transaction")
                 .removeHeader("*")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpRequestMethod.POST))
-                .setHeader("X-Date", simple(ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT )))
-                .setHeader("Accept", constant("application/json, text/plain, */*"))
                 .setHeader(Exchange.REST_HTTP_QUERY, simple("type=csv"))
+                .setHeader(Exchange.CONTENT_TYPE, constant("multipart"))
+//                .setHeader("X-Date", simple(ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT )))
+                .setHeader("Accept", constant("application/json, text/plain, */*"))
                 .setHeader("Purpose", simple("test"))
                 .setHeader("filename", simple("${exchangeProperty." + FILE_NAME + "}"))
-                .setHeader("Platform-TenantId", simple("${exchangeProperty." + TENANT_ID + "}"))
+//                .setHeader("Platform-TenantId", simple("${exchangeProperty." + TENANT_ID + "}"))
+                .setHeader("Platform-TenantId", simple("lion"))
                 .process(exchange -> {
                     logger.info(exchange.getIn().getHeaders().toString());
+//                    logger.info(exchange.getIn().getBody().toString());
+//                    final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+//                    builder.addBinaryBody("file", exchange.getProperty(TRANSACTION_LIST, byte[].class),
+//                            ContentType.MULTIPART_FORM_DATA, exchange.getProperty(FILE_NAME, String.class));
+//                    builder.addTextBody("name", exchange.getProperty(FILE_NAME, String.class));
+//                    exchange.getIn().setBody(builder.build());
+
+//                    MimeMultipartDataFormat multipartDataFormat = new MimeMultipartDataFormat();
+//                    multipartDataFormat.setBinaryContent();
+//                    multipartDataFormat.setContentTypeHeader("content-type");
+//                    multipartDataFormat.setBinaryContent(true);
+//                    multipartDataFormat.setHeadersInline(false);
+//                    multipartDataFormat.setIncludeHeaders("*");
+//                    multipartDataFormat.setMultipartSubType("mixed");
+//                    multipartDataFormat.setMultipartWithoutAttachment(false);
+//                    multipartDataFormat.ma
+
+//                    CamelMessage message = new DefaultCamelMessage();
+//                    CamelMessage
+//                    DefaultMessage message = new DefaultMessage(exchange);
+//                    message.
+
+                    // try 1
+                    Message in = exchange.getIn();
+                    in.setHeader(Exchange.CONTENT_TYPE, "multipart/form-data");
+                    String filename = exchange.getProperty(FILE_NAME, String.class);
+                    byte[] csvFile = fileTransferService.downloadFile(filename, bucketName);
+                    List<Transaction> transactionList = exchange.getProperty(TRANSACTION_LIST, List.class);
+                    String csvData = getListAsCsvString(transactionList);
+                    File file = new File(filename);
+                    file.setWritable(true);
+                    file.setReadable(true);
+                    logger.info("CSV data: " + csvData);
+                    FileWriter fileWriter = new FileWriter(file);
+                    fileWriter.write(csvData);
+                    fileWriter.close();
+
+                    // try 2
+//                    List<Transaction> transactionList = exchange.getProperty(TRANSACTION_LIST, List.class);
+//                    String csvData = getListAsCsvString(transactionList);
+//                    MimeMultipartDataFormat multipartDataFormat = new MimeMultipartDataFormat();
+//                    multipartDataFormat.setBinaryContent(csvData);
+//
+//                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                    ObjectOutputStream oos = new ObjectOutputStream(baos);
+//                    oos.writeObject(multipartDataFormat);
+//                    oos.flush();
+//                    oos.close();
+//
+//                    InputStream is = new ByteArrayInputStream(baos.toByteArray());
+
+                    // try 3
+//                    List<Transaction> transactionList = exchange.getProperty(TRANSACTION_LIST, List.class);
+//                    String attContentType = "text/plain";
+//                    String attText = getListAsCsvString(transactionList);
+//                    String attFilename = exchange.getProperty(FILE_NAME, String.class);
+//                    AttachmentMessage message = exchange.getIn(AttachmentMessage.class);
+//                    message.setHeader(Exchange.CONTENT_TYPE, "text/plain");
+//                    message.setHeader(Exchange.CONTENT_ENCODING, "UTF8");
+//                    Map<String, String> headers = new HashMap<>();
+//                    headers.put("Purpose", "test");
+//                    headers.put("filename", "test.csv");
+//                    headers.put("Platform-TenantId", "lion");
+//                    addAttachment(attContentType, attText, attFilename,headers, message);
+                    in.setBody(file);
+
+
                 })
-                .marshal().mimeMultipart()
-                .setHeader(Exchange.CONTENT_TYPE, constant("multipart/form-data"))
+//                .marshal().mimeMultipart("related", true, true, "(included|x-.*)", true)
+//                .marshal().mimeMultipart()
 //                .toD(bulkProcessorContactPoint + bulkProcessorEndPoint + "?bridgeEndpoint=true&throwExceptionOnFailure=false")
-                .toD("" + "?bridgeEndpoint=true&throwExceptionOnFailure=false&multipart=true")
+
+                .toD("https://webhook.site/1b6463a8-f183-4afb-bf31-ef0378b29aab" + "?bridgeEndpoint=true&throwExceptionOnFailure=false&multipart=true")
+                //.toD("http://localhost:5002/batchtransactions" + "?bridgeEndpoint=true&throwExceptionOnFailure=false&multipart=true")
                 .log(LoggingLevel.INFO, "Batch transaction API response: \n\n ${body}");
 
         from("direct:batch-transaction-response-handler")
@@ -235,6 +326,49 @@ public class InitBatchTransferRoute extends BaseRouteBuilder {
             transactionResultList.add(transactionResult);
         }
         return transactionResultList;
+    }
+
+
+    public String getListAsCsvString(List<Transaction> list){
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("id,request_id,payment_mode,payer_identifier_type,payer_identifier,payee_identifier_type,payee_identifier,amount,currency,note\n");
+        for(Transaction transaction : list){
+            stringBuilder.append(transaction.getId()).append(",")
+                    .append(transaction.getRequestId()).append(",")
+                    .append(transaction.getPaymentMode()).append(",")
+                    .append(transaction.getPayerIdentifierType()).append(",")
+                    .append(transaction.getPayerIdentifier()).append(",")
+                    .append(transaction.getPayeeIdentifierType()).append(",")
+                    .append(transaction.getPayeeIdentifier()).append(",")
+                    .append(transaction.getAmount()).append(",")
+                    .append(transaction.getCurrency()).append(",")
+                    .append(transaction.getNote()).append("\n");
+
+        }
+        return stringBuilder.toString();
+    }
+
+//    private MultiPartSpecification getMultiPart(String fileContent) {
+//        return new MultiPartSpecBuilder(fileContent.getBytes()).
+//                fileName("zeebe-test.bpmn").
+//                controlName("file").
+//                mimeType("text/plain").
+//                build();
+//    }
+
+    private void addAttachment(String attContentType, String attText, String attFileName, Map<String, String> headers,
+                               AttachmentMessage message)
+            throws IOException {
+        DataSource ds = new ByteArrayDataSource(attText.getBytes(), attContentType);
+        DefaultAttachment attachment = new DefaultAttachment(ds);
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                attachment.addHeader(entry.getKey(), entry.getValue());
+            }
+        }
+        message.addAttachmentObject(attFileName, attachment);
     }
 
 

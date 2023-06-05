@@ -2,6 +2,8 @@ package org.mifos.connector.bulk.zeebe;
 
 public class ZeebeVariables {
 
+    public static final String REQUEST_ID_STATUS_MAP = "requestIdStatusMap";
+
     private ZeebeVariables(){}
 
     public static final String PURPOSE = "purpose";
@@ -85,5 +87,11 @@ public class ZeebeVariables {
     public static final String BATCH_SUMMARY_SUCCESS = "batchSummarySuccess";
 
     public static final String PAGE_NO = "pageNo";
+
+    public static final String RESULT_TRANSACTION_LIST = "resultTransactionList";
+
+    public static final String LOCAL_FILE_PATH = "localFilePath";
+
+    public static final String OVERRIDE_HEADER = "overrideHeader";
 
 }

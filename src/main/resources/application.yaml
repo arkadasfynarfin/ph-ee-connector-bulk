@@ -56,6 +56,7 @@ config:
   completion-threshold-check:
     completion-threshold: 90
     max-retry-count: 10
+    wait-timer: PT10S
   date-format: "yyyy-MM-dd'T'hh:mm:ssXXX"
   reconciliation:
     enable: false
@@ -64,7 +65,8 @@ dfspids: "DFSPID"
 
 
 operations-app:
-  contactpoint: "https://ops-bk.sandbox.fynarfin.io"
+#  contactpoint: "https://ops-bk.sandbox.fynarfin.io"
+  contactpoint: "http://localhost:5060"
   username: "mifos"
   password: "password"
   endpoints:

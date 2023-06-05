@@ -8,6 +8,8 @@ public class SortDTO {
 
     private boolean empty;
 
+    public SortDTO(){}
+
     public SortDTO(boolean sorted, boolean unsorted, boolean empty) {
         this.sorted = sorted;
         this.unsorted = unsorted;

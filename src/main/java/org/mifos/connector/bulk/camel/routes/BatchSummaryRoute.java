@@ -25,25 +25,27 @@ public class BatchSummaryRoute extends BaseRouteBuilder {
         from(RouteId.BATCH_SUMMARY.getValue())
                 .id(RouteId.BATCH_SUMMARY.getValue())
                 .log("Starting route " + RouteId.BATCH_SUMMARY.name())
-                .to("direct:get-access-token")
-                .choice()
-                .when(exchange -> exchange.getProperty(OPS_APP_ACCESS_TOKEN, String.class) != null)
-                .log(LoggingLevel.INFO, "Got access token, moving on to API call")
+//                .to("direct:get-access-token")
+//                .choice()
+//                .when(exchange -> exchange.getProperty(OPS_APP_ACCESS_TOKEN, String.class) != null)
+//                .log(LoggingLevel.INFO, "Got access token, moving on to API call")
                 .to("direct:batch-summary")
-                .to("direct:batch-summary-response-handler")
-                .otherwise()
-                .log(LoggingLevel.INFO, "Authentication failed.")
-                .endChoice();
+                .to("direct:batch-summary-response-handler");
+//                .otherwise()
+//                .log(LoggingLevel.INFO, "Authentication failed.")
+//                .endChoice();
 
 
         getBaseExternalApiRequestRouteDefinition("batch-summary", HttpRequestMethod.GET)
                 .setHeader(Exchange.REST_HTTP_QUERY, simple("batchId=${exchangeProperty." + BATCH_ID + "}"))
-                .setHeader("Authorization", simple("Bearer ${exchangeProperty."+OPS_APP_ACCESS_TOKEN+"}"))
-                .setHeader("Platform-TenantId", simple("${exchangeProperty." + TENANT_ID + "}"))
+//                .setHeader("Authorization", simple("Bearer ${exchangeProperty."+OPS_APP_ACCESS_TOKEN+"}"))
+//                .setHeader("Platform-TenantId", simple("${exchangeProperty." + TENANT_ID + "}"))
+                .setHeader("Platform-TenantId", simple("rhino"))
                 .process(exchange -> {
                     logger.info(exchange.getIn().getHeaders().toString());
                 })
-                .toD(operationsAppConfig.batchSummaryUrl + "?bridgeEndpoint=true")
+//                .toD(operationsAppConfig.batchSummaryUrl + "?bridgeEndpoint=true")
+                .toD("http://localhost:8080/mockapi/v1/batch/summary" + "?bridgeEndpoint=true")
                 .log(LoggingLevel.INFO, "Batch summary API response: \n\n ${body}");
 
         from("direct:batch-summary-response-handler")
@@ -66,7 +68,8 @@ public class BatchSummaryRoute extends BaseRouteBuilder {
                     BigDecimal successfulAmount = batchSummary.getSuccessfulAmount();
                     BigDecimal totalAmount = batchSummary.getTotalAmount();
 
-                    long percentage =(long)(((double)batchSummary.getSuccessful()/batchSummary.getTotal())*100);
+                    long percentage = (long)(((double)
+                            (batchSummary.getSuccessful() + batchSummary.getFailed())/batchSummary.getTotal()) *100);
 
                     exchange.setProperty(COMPLETION_RATE, percentage);
                     exchange.setProperty(ONGOING_TRANSACTION, ongoingTransfersCount);

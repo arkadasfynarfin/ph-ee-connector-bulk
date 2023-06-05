@@ -5,7 +5,9 @@ public enum RouteId {
 
     BATCH_SUMMARY("direct:batchSummary"),
 
-    BATCH_DETAIL("direct:batchDetail");
+    BATCH_DETAIL("direct:batchDetail"),
+
+    UPLOAD_RESULT_FILE("direct:upload-result-file");
 
 
     private final String value;

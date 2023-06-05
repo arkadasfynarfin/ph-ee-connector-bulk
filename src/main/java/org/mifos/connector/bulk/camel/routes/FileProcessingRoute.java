@@ -82,9 +82,8 @@ public class FileProcessingRoute extends BaseRouteBuilder {
                     List<TransactionResult> transactionList = exchange.getProperty(RESULT_TRANSACTION_LIST, List.class);
 
                     // getting header
-                    Boolean overrideHeader = exchange.getProperty(OVERRIDE_HEADER, Boolean.class);
-
-                    csvWriter(transactionList, TransactionResult.class, csvMapper, overrideHeader, filepath);
+//                    Boolean overrideHeader = exchange.getProperty(OVERRIDE_HEADER, Boolean.class);
+                    csvWriter(transactionList, TransactionResult.class, csvMapper, true, filepath);
                 })
                 .log("Update complete");
 

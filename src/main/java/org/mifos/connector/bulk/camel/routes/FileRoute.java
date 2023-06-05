@@ -25,6 +25,7 @@ public class FileRoute extends BaseRouteBuilder {
 
     @Override
     public void configure() throws Exception {
+
         from("direct:download-file")
                 .id("direct:download-file")
                 .log("Starting route: direct:download-file")
@@ -54,6 +55,21 @@ public class FileRoute extends BaseRouteBuilder {
                     String serverFileName = fileTransferService.uploadFile(new File(filepath), bucketName);
                     exchange.setProperty(SERVER_FILE_NAME, serverFileName);
                     logger.info("Uploaded file: {}", serverFileName);
+                })
+                .to("direct:delete-local-file");
+
+        /**
+         * Deletes file at LOCAL_FILE_PATH
+         * Input the local file path through exchange variable: [LOCAL_FILE_PATH]
+         */
+        from("direct:delete-local-file")
+                .id("direct:delete-local-file")
+                .log("Deleting local file")
+                .process(exchange -> {
+                    String filepath = exchange.getProperty(LOCAL_FILE_PATH, String.class);
+                    File file = new File(filepath);
+                    boolean success = file.delete();
+                    logger.info("Delete file: {}, isSuccess: {}", filepath, success);
                 });
     }
 }

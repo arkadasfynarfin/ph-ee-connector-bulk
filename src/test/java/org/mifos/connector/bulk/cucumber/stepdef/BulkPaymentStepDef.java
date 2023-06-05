@@ -89,14 +89,14 @@ public class BulkPaymentStepDef extends BaseStepDef {
         headers.put("Platform-TenantId", "lion");
         RequestSpecification requestSpec = getDefaultSpec();
         String batchSummaryResponse =  RestAssured.given(requestSpec)
-                .baseUri("https://ops-bk.sandbox.fynarfin.io")
+                .baseUri("http://localhost:8080")
                 .param("batchId", batchId)
                 .param("X-CorrelationID", "12345678-6897-6798-6798-098765432134")
                 .headers(headers)
                 .expect()
                 .spec(new ResponseSpecBuilder().expectStatusCode(200).build())
                 .when()
-                .post("/api/v1/batch")
+                .post("/mockapi/v1/batch")
                 .andReturn().asString();
         Gson gson = new Gson();
         BatchDTO batchDTO = gson.fromJson(batchSummaryResponse, BatchDTO.class);
